@@ -1,0 +1,11 @@
+# Dependencias para el servicio de diagnóstico médico
+
+# Framework web
+Flask==3.0.0
+
+# Servidor WSGI para producción (opcional)
+# gunicorn==21.2.0
+
+# Utilidades
+Werkzeug==3.0.1
+

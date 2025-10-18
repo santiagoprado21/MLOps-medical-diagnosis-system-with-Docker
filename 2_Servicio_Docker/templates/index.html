@@ -1,0 +1,71 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sistema de Diagnóstico Médico</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <div class="icon">🏥</div>
+            <h1>Sistema de Diagnóstico Médico</h1>
+            <p>Ingrese los signos vitales del paciente para obtener un diagnóstico preliminar</p>
+        </div>
+
+        <form id="diagnosticoForm">
+            <div class="form-group">
+                <label for="temperatura">Temperatura Corporal</label>
+                <div class="input-wrapper">
+                    <input type="number" id="temperatura" name="temperatura" 
+                           step="0.1" min="30" max="45" required
+                           placeholder="36.5">
+                    <span class="unit">°C</span>
+                </div>
+                <div class="hint">Rango normal: 36.5 - 37.5 °C</div>
+            </div>
+
+            <div class="form-group">
+                <label for="frecuencia_cardiaca">Frecuencia Cardíaca</label>
+                <div class="input-wrapper">
+                    <input type="number" id="frecuencia_cardiaca" name="frecuencia_cardiaca" 
+                           min="30" max="200" required
+                           placeholder="75">
+                    <span class="unit">bpm</span>
+                </div>
+                <div class="hint">Rango normal: 60 - 100 bpm</div>
+            </div>
+
+            <div class="form-group">
+                <label for="presion_arterial">Presión Arterial Sistólica</label>
+                <div class="input-wrapper">
+                    <input type="number" id="presion_arterial" name="presion_arterial" 
+                           min="50" max="250" required
+                           placeholder="120">
+                    <span class="unit">mmHg</span>
+                </div>
+                <div class="hint">Rango normal: 90 - 120 mmHg</div>
+            </div>
+
+            <button type="submit">Realizar Diagnóstico</button>
+        </form>
+
+        <div class="loading">
+            <div class="spinner"></div>
+            <p>Analizando datos...</p>
+        </div>
+
+        <div class="result" id="resultado">
+            <h2>Diagnóstico:</h2>
+            <p id="diagnostico-text"></p>
+        </div>
+
+        <div class="footer">
+            <p>Projecto 1 Machine Learning - Santiago Prado</p>
+        </div>
+    </div>
+
+    <script src="{{ url_for('static', filename='script.js') }}"></script>
+</body>
+</html>
