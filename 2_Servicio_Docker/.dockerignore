@@ -34,3 +34,7 @@ test_*.py
 # Logs
 *.log
 
+# Archivos de datos generados
+predictions_log.json
+*.json
+
