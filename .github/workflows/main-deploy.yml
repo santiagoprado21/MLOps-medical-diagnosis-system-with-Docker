@@ -1,0 +1,85 @@
+name: CD - Deploy to GitHub Packages
+
+# Evento: Se ejecuta cuando hay un push a main (después de merge de PR)
+on:
+  push:
+    branches:
+      - main
+
+env:
+  REGISTRY: ghcr.io
+  IMAGE_NAME: ${{ github.repository }}
+
+jobs:
+  test-and-deploy:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      packages: write
+    
+    steps:
+      # 1. Checkout del código
+      - name: Checkout código
+        uses: actions/checkout@v4
+      
+      # 2. Configurar Python
+      - name: Configurar Python 3.11
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      
+      # 3. Instalar dependencias
+      - name: Instalar dependencias
+        run: |
+          cd 2_Servicio_Docker
+          python -m pip install --upgrade pip
+          pip install -r requirements.txt
+      
+      # 4. Ejecutar pruebas unitarias (verificación final)
+      - name: Ejecutar pruebas unitarias
+        run: |
+          cd 2_Servicio_Docker
+          pytest test_app.py -v --tb=short
+      
+      # 5. Configurar Docker Buildx
+      - name: Configurar Docker Buildx
+        uses: docker/setup-buildx-action@v3
+      
+      # 6. Login a GitHub Container Registry
+      - name: Login a GitHub Container Registry
+        uses: docker/login-action@v3
+        with:
+          registry: ${{ env.REGISTRY }}
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+      
+      # 7. Extraer metadata para Docker
+      - name: Extraer metadata de Docker
+        id: meta
+        uses: docker/metadata-action@v5
+        with:
+          images: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}
+          tags: |
+            type=ref,event=branch
+            type=sha,prefix={{branch}}-
+            type=raw,value=latest,enable={{is_default_branch}}
+      
+      # 8. Construir y publicar imagen de Docker
+      - name: Construir y publicar imagen Docker
+        uses: docker/build-push-action@v5
+        with:
+          context: ./2_Servicio_Docker
+          push: true
+          tags: ${{ steps.meta.outputs.tags }}
+          labels: ${{ steps.meta.outputs.labels }}
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+      
+      # 9. Resumen del despliegue
+      - name: Resumen del despliegue
+        run: |
+          echo "✅ Imagen Docker publicada exitosamente"
+          echo "📦 Registro: ${{ env.REGISTRY }}"
+          echo "🏷️ Tags: ${{ steps.meta.outputs.tags }}"
+          echo "🔗 Ver paquete: https://github.com/${{ github.repository }}/pkgs/container/${{ github.event.repository.name }}"
+

@@ -1,0 +1,77 @@
+name: CI - Pull Request Checks
+
+# Evento: Se ejecuta cuando se crea o actualiza un PR contra main
+on:
+  pull_request:
+    branches:
+      - main
+
+jobs:
+  test-and-validate:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      pull-requests: write
+    
+    steps:
+      # 1. Checkout del código
+      - name: Checkout código
+        uses: actions/checkout@v4
+      
+      # 2. Comentar inicio del CI/CD
+      - name: Comentar inicio del CI/CD
+        uses: actions/github-script@v7
+        with:
+          script: |
+            github.rest.issues.createComment({
+              issue_number: context.issue.number,
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              body: '🚀 **CI/CD en acción. Ejecutando tareas...**\n\nValidando cambios propuestos en el PR.'
+            })
+      
+      # 3. Configurar Python
+      - name: Configurar Python 3.11
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      
+      # 4. Instalar dependencias
+      - name: Instalar dependencias
+        run: |
+          cd 2_Servicio_Docker
+          python -m pip install --upgrade pip
+          pip install -r requirements.txt
+      
+      # 5. Ejecutar pruebas unitarias
+      - name: Ejecutar pruebas unitarias
+        run: |
+          cd 2_Servicio_Docker
+          pytest test_app.py -v --tb=short
+      
+      # 6. Comentar éxito del CI/CD
+      - name: Comentar éxito del CI/CD
+        if: success()
+        uses: actions/github-script@v7
+        with:
+          script: |
+            github.rest.issues.createComment({
+              issue_number: context.issue.number,
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              body: '✅ **CI/CD terminado con éxito.**\n\nTodas las pruebas han pasado correctamente. El PR está listo para revisión final.'
+            })
+      
+      # 7. Comentar fallo del CI/CD
+      - name: Comentar fallo del CI/CD
+        if: failure()
+        uses: actions/github-script@v7
+        with:
+          script: |
+            github.rest.issues.createComment({
+              issue_number: context.issue.number,
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              body: '❌ **CI/CD terminado con errores.**\n\nAlgunas pruebas han fallado. Por favor, revisa los logs para más detalles.'
+            })
+

@@ -9,3 +9,6 @@ Flask==3.0.0
 # Utilidades
 Werkzeug==3.0.1
 
+# Pruebas
+pytest==7.4.3
+
