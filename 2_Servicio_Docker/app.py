@@ -5,12 +5,67 @@ Este servicio simula un modelo de Machine Learning para clasificación de enferm
 
 from flask import Flask, request, jsonify, render_template
 import logging
+import json
+import os
+from datetime import datetime
 
 app = Flask(__name__)
 
 # Configuración de logging
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
+
+# Archivo para almacenar predicciones
+PREDICTIONS_FILE = 'predictions_log.json'
+
+
+def guardar_prediccion(temperatura, frecuencia_cardiaca, presion_arterial, diagnostico):
+    """
+    Guarda una predicción en el archivo de registro.
+    """
+    prediccion = {
+        'timestamp': datetime.now().isoformat(),
+        'parametros': {
+            'temperatura': float(temperatura),
+            'frecuencia_cardiaca': int(frecuencia_cardiaca),
+            'presion_arterial': int(presion_arterial)
+        },
+        'diagnostico': diagnostico
+    }
+    
+    # Leer predicciones existentes
+    predicciones = []
+    if os.path.exists(PREDICTIONS_FILE):
+        try:
+            with open(PREDICTIONS_FILE, 'r', encoding='utf-8') as f:
+                predicciones = json.load(f)
+        except (json.JSONDecodeError, IOError):
+            predicciones = []
+    
+    # Agregar nueva predicción
+    predicciones.append(prediccion)
+    
+    # Guardar todas las predicciones
+    try:
+        with open(PREDICTIONS_FILE, 'w', encoding='utf-8') as f:
+            json.dump(predicciones, f, ensure_ascii=False, indent=2)
+    except IOError as e:
+        logger.error(f"Error al guardar predicción: {str(e)}")
+
+
+def leer_predicciones():
+    """
+    Lee todas las predicciones del archivo de registro.
+    """
+    if not os.path.exists(PREDICTIONS_FILE):
+        return []
+    
+    try:
+        with open(PREDICTIONS_FILE, 'r', encoding='utf-8') as f:
+            return json.load(f)
+    except (json.JSONDecodeError, IOError) as e:
+        logger.error(f"Error al leer predicciones: {str(e)}")
+        return []
 
 
 def modelo_diagnostico(temperatura, frecuencia_cardiaca, presion_arterial):
@@ -129,6 +184,9 @@ def predecir():
         # Realizar predicción
         diagnostico = modelo_diagnostico(temperatura, frecuencia_cardiaca, presion_arterial)
         
+        # Guardar predicción en archivo
+        guardar_prediccion(temperatura, frecuencia_cardiaca, presion_arterial, diagnostico)
+        
         # Log de la predicción
         logger.info(f"Predicción realizada - Temp: {temperatura}, FC: {frecuencia_cardiaca}, "
                    f"PA: {presion_arterial} -> Resultado: {diagnostico}")
@@ -155,6 +213,53 @@ def health_check():
         'status': 'healthy',
         'service': 'Sistema de Diagnóstico Médico',
         'version': '1.0.0'
+    })
+
+
+@app.route('/reporte', methods=['GET'])
+def generar_reporte():
+    """
+    Endpoint para obtener estadísticas de las predicciones realizadas.
+    
+    Retorna:
+        - Número total de predicciones por categoría
+        - Últimas 5 predicciones realizadas
+        - Fecha de la última predicción
+    """
+    predicciones = leer_predicciones()
+    
+    if not predicciones:
+        return jsonify({
+            'mensaje': 'No hay predicciones registradas',
+            'total_predicciones': 0,
+            'predicciones_por_categoria': {},
+            'ultimas_5_predicciones': [],
+            'fecha_ultima_prediccion': None
+        })
+    
+    # Contar predicciones por categoría
+    predicciones_por_categoria = {}
+    for pred in predicciones:
+        diagnostico = pred['diagnostico']
+        predicciones_por_categoria[diagnostico] = predicciones_por_categoria.get(diagnostico, 0) + 1
+    
+    # Obtener últimas 5 predicciones
+    ultimas_5 = predicciones[-5:] if len(predicciones) >= 5 else predicciones
+    ultimas_5.reverse()  # Mostrar la más reciente primero
+    
+    # Obtener fecha de última predicción
+    fecha_ultima = predicciones[-1]['timestamp']
+    
+    return jsonify({
+        'total_predicciones': len(predicciones),
+        'predicciones_por_categoria': predicciones_por_categoria,
+        'ultimas_5_predicciones': ultimas_5,
+        'fecha_ultima_prediccion': fecha_ultima,
+        'resumen': {
+            'total': len(predicciones),
+            'categorias': list(predicciones_por_categoria.keys()),
+            'ultima_actualizacion': fecha_ultima
+        }
     })
 
 
