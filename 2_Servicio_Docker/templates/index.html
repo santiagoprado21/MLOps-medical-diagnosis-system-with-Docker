@@ -12,6 +12,7 @@
             <div class="icon">🏥</div>
             <h1>Sistema de Diagnóstico Médico</h1>
             <p>Ingrese los signos vitales del paciente para obtener un diagnóstico preliminar</p>
+            <button id="btnReporte" class="btn-reporte">📊 Ver Reporte de Estadísticas</button>
         </div>
 
         <form id="diagnosticoForm">
@@ -59,6 +60,39 @@
         <div class="result" id="resultado">
             <h2>Diagnóstico:</h2>
             <p id="diagnostico-text"></p>
+        </div>
+
+        <div class="reporte-section" id="reporteSection" style="display: none;">
+            <div class="reporte-header">
+                <h2>📊 Reporte de Estadísticas</h2>
+                <button id="btnCerrarReporte" class="btn-close">✖ Cerrar</button>
+            </div>
+            
+            <div class="reporte-content">
+                <div class="reporte-card">
+                    <h3>📈 Total de Predicciones</h3>
+                    <div class="reporte-total" id="totalPredicciones">0</div>
+                </div>
+
+                <div class="reporte-card">
+                    <h3>📊 Predicciones por Categoría</h3>
+                    <div id="prediccionesPorCategoria" class="categoria-list">
+                        <p class="no-data">No hay predicciones registradas</p>
+                    </div>
+                </div>
+
+                <div class="reporte-card">
+                    <h3>🕐 Última Predicción</h3>
+                    <div id="ultimaFecha" class="fecha-ultima">-</div>
+                </div>
+
+                <div class="reporte-card full-width">
+                    <h3>📋 Últimas 5 Predicciones</h3>
+                    <div id="ultimas5" class="predicciones-list">
+                        <p class="no-data">No hay predicciones registradas</p>
+                    </div>
+                </div>
+            </div>
         </div>
 
         <div class="footer">
