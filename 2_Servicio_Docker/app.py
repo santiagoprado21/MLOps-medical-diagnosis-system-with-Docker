@@ -24,7 +24,7 @@ def modelo_diagnostico(temperatura, frecuencia_cardiaca, presion_arterial):
     
     Retorna:
         str: Estado del diagnóstico (NO ENFERMO, ENFERMEDAD LEVE, 
-             ENFERMEDAD AGUDA, ENFERMEDAD CRÓNICA)
+             ENFERMEDAD AGUDA, ENFERMEDAD CRÓNICA, ENFERMEDAD TERMINAL)
     """
     
     # Conversión a tipos numéricos
@@ -39,33 +39,45 @@ def modelo_diagnostico(temperatura, frecuencia_cardiaca, presion_arterial):
     anomalias_leves = 0
     anomalias_moderadas = 0
     anomalias_graves = 0
+    anomalias_criticas = 0
     
     # Análisis de temperatura
     if 37.5 < temp <= 38.0:
         anomalias_leves += 1
     elif 38.0 < temp <= 39.0:
         anomalias_moderadas += 1
-    elif temp > 39.0 or temp < 35.0:
+    elif 39.0 < temp <= 40.5 or 33.0 <= temp < 35.0:
         anomalias_graves += 1
+    elif temp > 40.5 or temp < 33.0:
+        anomalias_criticas += 1
     
     # Análisis de frecuencia cardíaca
     if 100 < fc <= 110 or 50 <= fc < 60:
         anomalias_leves += 1
     elif 110 < fc <= 130 or 40 <= fc < 50:
         anomalias_moderadas += 1
-    elif fc > 130 or fc < 40:
+    elif 130 < fc <= 150 or 30 <= fc < 40:
         anomalias_graves += 1
+    elif fc > 150 or fc < 30:
+        anomalias_criticas += 1
     
     # Análisis de presión arterial
     if (120 < pa <= 130) or (80 <= pa < 90):
         anomalias_leves += 1
     elif (130 < pa <= 160) or (70 <= pa < 80):
         anomalias_moderadas += 1
-    elif pa > 160 or pa < 70:
+    elif (160 < pa <= 180) or (60 <= pa < 70):
         anomalias_graves += 1
+    elif pa > 180 or pa < 60:
+        anomalias_criticas += 1
     
     # Lógica de clasificación
-    if anomalias_graves >= 1:
+    # Casos críticos/terminales: múltiples anomalías críticas o combinación extrema
+    if anomalias_criticas >= 2 or (anomalias_criticas >= 1 and anomalias_graves >= 2):
+        return "ENFERMEDAD TERMINAL"
+    elif anomalias_criticas >= 1 or anomalias_graves >= 2:
+        return "ENFERMEDAD AGUDA"
+    elif anomalias_graves >= 1:
         return "ENFERMEDAD AGUDA"
     elif anomalias_moderadas >= 2:
         return "ENFERMEDAD CRÓNICA"
@@ -171,6 +183,11 @@ def test_casos():
             'descripcion': 'Enfermedad crónica - Hipertensión moderada',
             'parametros': {'temperatura': 37.0, 'frecuencia_cardiaca': 115, 'presion_arterial': 145},
             'diagnostico': modelo_diagnostico(37.0, 115, 145)
+        },
+        {
+            'descripcion': 'Enfermedad terminal - Condiciones críticas múltiples',
+            'parametros': {'temperatura': 41.5, 'frecuencia_cardiaca': 165, 'presion_arterial': 190},
+            'diagnostico': modelo_diagnostico(41.5, 165, 190)
         }
     ]
     
