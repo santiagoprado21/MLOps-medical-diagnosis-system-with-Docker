@@ -31,3 +31,6 @@ Thumbs.db
 .env
 .env.local
 
+# Archivos de datos generados
+predictions_log.json
+
